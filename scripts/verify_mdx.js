@@ -1,4 +1,4 @@
-const mdx = require('@mdx-js/mdx');
+const mdx = require('../vendor/mdx');
 const fs = require('fs');
 const glob = require('glob');
 

@@ -17,13 +17,13 @@ import GithubSlugger from 'github-slugger';
 import { parseHeading } from '../../plugins/gatsby-remark-custom-heading-ids/utils/heading';
 import { TYPES } from '../utils/constants';
 
-const BasicDoc = ({ data, location, pageContext }) => {
+const BasicDoc = ({ data, location, pageContext, children }) => {
   const { mdx } = data;
   const {
     frontmatter,
     mdxAST,
-    body,
-    fields: { fileRelativePath },
+    body: rawBody,
+    fields: { parent: { relativePath: fileRelativePath }},
     relatedResources,
   } = mdx;
   const { disableSwiftype } = pageContext;
@@ -31,7 +31,7 @@ const BasicDoc = ({ data, location, pageContext }) => {
   const headings = useMemo(() => {
     const slugs = new GithubSlugger();
 
-    return mdxAST.children
+    return children
       .filter(
         (node) =>
           node.type === 'heading' &&
@@ -43,7 +43,7 @@ const BasicDoc = ({ data, location, pageContext }) => {
 
         return { id: id || slugs.slug(text), text };
       });
-  }, [mdxAST]);
+  }, [children]);
 
   const {
     title,
@@ -135,7 +135,7 @@ export const pageQuery = graphql`
   query($slug: String!, $locale: String) {
     mdx(fields: { slug: { eq: $slug } }) {
       mdxAST
-      body
+      rawBody
       frontmatter {
         title
         metaDescription
@@ -144,8 +144,10 @@ export const pageQuery = graphql`
         translationType
         dataSource
       }
-      fields {
-        fileRelativePath
+      parent {
+        ... on File {
+          relativePath
+        }
       }
       relatedResources(limit: 3) {
         title

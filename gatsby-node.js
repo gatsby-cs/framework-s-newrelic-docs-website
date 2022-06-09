@@ -30,7 +30,70 @@ exports.onCreateWebpackConfig = ({ actions }) => {
   });
 };
 
+exports.createResolvers = ({ createResolvers }) => {
+  console.log("createResolvers")
+  const resolvers = {
+    MdxFields:{
+      fileAbsolutePath: {
+        type: "String",
+        resolve(source, args, context, info) {
+          return source.absolutePath
+        },
+      },
+      fileRelativePath:{
+        type: "String",
+        resolve(source, args, context, info) {
+          return source.relativePath
+        },
+      },
+    },
+    Mdx: {
+      excerpt: {
+        type: "String",
+        resolve(source, args, context, info) {
+          return source.rawBody
+        },
+      },
+      mdxAST:{
+        type: "String",
+        resolve(source, args, context, info) {
+          return source.rawBody
+        },
+      },
+      body: {
+        type: "JSON",
+        resolve(source, args, context, info) {
+          console.log({source})
+          return "{}"
+        },
+      },
+      fileAbsolutePath: {
+        type: "String",
+        resolve(source, args, context, info) {
+          return source.absolutePath
+        },
+      },
+      fileRelativePath:{
+        type: "String",
+        resolve(source, args, context, info) {
+          return source.relativePath
+        },
+      },
+      tableOfContents: {
+        type: "String",
+        args: {
+          maxDepth: "Float",
+        },
+        resolve(source, args, context, info) {
+          return "@todo"
+        },
+      },
+    },
+  }
+  createResolvers(resolvers)
+}
 exports.onCreateNode = ({ node, getNode, actions }) => {
+  console.log("onCreateNode")
   const { createNodeField } = actions;
 
   if (
@@ -52,38 +115,38 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
   const { data, errors } = await graphql(`
     query {
       allMarkdownRemark(
-        filter: { fileAbsolutePath: { regex: "/src/content/" } }
+        filter: { parent: { internal: { description:{ regex: "/src/content/" } } } }
       ) {
         edges {
           node {
             frontmatter {
               type
             }
-            fields {
-              fileRelativePath
-              slug
+            parent {
+              ... on File {
+                relativePath
             }
           }
         }
       }
 
       whatsNewPosts: allMarkdownRemark(
-        filter: { fileAbsolutePath: { regex: "/src/content/whats-new/" } }
+        filter: { parent: { internal: { description:{ regex:  "/src/content/whats-new/"  } } } }
       ) {
         nodes {
-          fields {
             slug
-          }
         }
       }
 
-      allMdx(filter: { fileAbsolutePath: { regex: "/src/content/" } }) {
+      allMdx(filter: { parent: { internal: { description:{ regex: "/src/content/" } } } }) {
         edges {
           node {
-            fields {
-              fileRelativePath
-              slug
+            parent {
+              ... on File {
+                relativePath
+              }
             }
+            slug
             frontmatter {
               type
               subject
@@ -94,14 +157,16 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
       }
 
       allI18nMdx: allMdx(
-        filter: { fileAbsolutePath: { regex: "/src/i18n/content/" } }
+        filter: { parent: { internal: { description:{ regex: "/src/i18n/content/" } } } }
       ) {
         edges {
           node {
-            fields {
-              fileRelativePath
-              slug
+            parent {
+              ... on File {
+                relativePath
+              }
             }
+            slug
             frontmatter {
               type
               subject
@@ -112,11 +177,8 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
       }
 
       releaseNotes: allMdx(
-        filter: {
-          fileAbsolutePath: {
-            regex: "/src/content/docs/release-notes/.*(?<!index).mdx/"
-          }
-        }
+        filter: { parent: { internal: { description:{ regex:  "/src/content/docs/release-notes/.*(?<!index).mdx/"
+      } } } }
         sort: { fields: frontmatter___releaseDate, order: DESC }
       ) {
         group(limit: 1, field: frontmatter___subject) {
@@ -125,22 +187,16 @@ exports.createPages = async ({ actions, graphql, reporter }) => {
             frontmatter {
               releaseDate
             }
-            fields {
-              slug
-            }
+            slug
           }
         }
       }
 
       landingPagesReleaseNotes: allMdx(
-        filter: {
-          fileAbsolutePath: { regex: "/docs/release-notes/.*/index.mdx$/" }
-        }
+        filter: { parent: { internal: { description:{ regex:  "/docs/release-notes/.*/index.mdx$/" } } } }
       ) {
         nodes {
-          fields {
-            slug
-          }
+          slug
           frontmatter {
             subject
             redirects

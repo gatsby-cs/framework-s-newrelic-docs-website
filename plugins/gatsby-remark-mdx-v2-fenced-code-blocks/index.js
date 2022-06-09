@@ -1,9 +1,9 @@
-const { createCompiler } = require('@mdx-js/mdx');
+const {createProcessor} = require('../../vendor/mdx');
 const visit = require('unist-util-visit');
 
 const INVALID_CODE_BLOCK = /`{3,}\n/;
 
-const compiler = createCompiler();
+const compiler = createProcessor();
 
 module.exports = ({ markdownAST }) => {
   visit(
